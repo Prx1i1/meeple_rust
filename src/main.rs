@@ -15,6 +15,12 @@ struct Tile{
     on: u32,
 }
 
+#[derive(Copy, Clone, Debug)]
+struct Position{
+    x: i32,
+    y: i32,
+}
+
 fn emptyBoardAssemble(x: i32, y: i32) -> Vec<Vec<Tile>>{
     let mut res: Vec<Vec<Tile>> = vec![];
     for i in (0..y){
@@ -25,6 +31,88 @@ fn emptyBoardAssemble(x: i32, y: i32) -> Vec<Vec<Tile>>{
         res.push(row);
     }
     res
+}
+
+//return array of positions
+fn get_adjacent(pos: Position, x: i32, y: i32, tiles: Vec<Vec<Tile>>)
+-> Vec<Position>{
+
+    let mut results: Vec<Position> = vec![];
+
+    //in x axis
+    for i in [pos.x - 1, pos.x + 1]{
+        //basic edge cases
+        if i >= 0 && i < x{
+
+            //candidate position and tiles
+            let candidate: Position = Position {x: i, y: pos.y};
+            let current_tile: Tile = tiles[pos.y as usize][pos.x as usize];
+            let checked_tile: Tile = tiles[pos.y as usize][i as usize];
+            
+            //check walls
+            let mut walls_blocked: bool = false;
+            if( i > pos.x){
+                walls_blocked = current_tile.walls[1] || checked_tile.walls[3];
+            }
+            if (i < pos.x){
+                walls_blocked = current_tile.walls[3] || checked_tile.walls[1];
+            }
+
+            //walls ok
+            if !walls_blocked{
+                results.push(Position {x: i, y: pos.y});
+            }
+
+        }
+    }
+
+    // for j in (pos.y - 1 .. pos.y + 2){
+    //     if j >= 0 && j < y{
+    //         results.push(Position { x: pos.x, y: j, value: pos.value + 1});
+    //     }
+    // }
+    results
+
+}
+
+//fix board w/ bfs or dfs pathing
+fn fix_board(board: Board<Tile>) /* -> Board<Tile>*/{
+
+    let mut board_nums: Vec<Vec<i32>> = vec![vec![0; board.x];board.y]; 
+
+    //starting pos
+    let mut pointer: Position= Position { x: (0), y: (0)};
+
+    //update board numbers
+    let mut tiles: Vec<Position> = vec![];
+    tiles.push(pointer);
+    while tiles.len() > 0{
+        let curr_tile: Position= tiles.pop().expect("err");
+        //adjacent tiles of unknown value
+        let adjacents: Vec<Position> = get_adjacent(
+        curr_tile,
+        board.x as i32,
+        board.y as i32,
+        board.tiles.clone());
+
+        for pos in adjacents.iter(){
+            
+            //adjacent tile has lower value
+            if board_nums[curr_tile.x as usize][curr_tile.y as usize]
+                > board_nums[pos.x as usize][pos.y as usize]{
+                    tiles.push(*pos);
+            }
+        }
+
+    }
+
+    //debug
+    println!("{:?}", board_nums);
+
+
+    //after getting distances start fixing map by removing walls #todo
+
+
 }
 
 //generate random walls on n tiles
