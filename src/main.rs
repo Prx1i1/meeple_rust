@@ -34,7 +34,7 @@ fn emptyBoardAssemble(x: i32, y: i32) -> Vec<Vec<Tile>>{
 }
 
 //return array of positions
-fn get_adjacent(pos: Position, x: i32, y: i32, tiles: Vec<Vec<Tile>>)
+fn get_adjacent(pos: Position, x: i32, y: i32, tiles: &Vec<Vec<Tile>>)
 -> Vec<Position>{
 
     let mut results: Vec<Position> = vec![];
@@ -76,31 +76,38 @@ fn get_adjacent(pos: Position, x: i32, y: i32, tiles: Vec<Vec<Tile>>)
 }
 
 //fix board w/ bfs or dfs pathing
-fn fix_board(board: Board<Tile>) /* -> Board<Tile>*/{
+fn fix_board(board: Board<Tile>) -> Board<Tile>{
 
-    let mut board_nums: Vec<Vec<i32>> = vec![vec![0; board.x];board.y]; 
+    let mut board_nums: Vec<Vec<i32>> = vec![vec![-1; board.x];board.y]; 
 
     //starting pos
     let mut pointer: Position= Position { x: (0), y: (0)};
+    board_nums[0][0] = 0;
 
     //update board numbers
     let mut tiles: Vec<Position> = vec![];
     tiles.push(pointer);
     while tiles.len() > 0{
+
+        println!("{:?}", tiles);
+
         let curr_tile: Position= tiles.pop().expect("err");
         //adjacent tiles of unknown value
         let adjacents: Vec<Position> = get_adjacent(
         curr_tile,
         board.x as i32,
         board.y as i32,
-        board.tiles.clone());
+        &board.tiles);
 
         for pos in adjacents.iter(){
             
             //adjacent tile has lower value
-            if board_nums[curr_tile.x as usize][curr_tile.y as usize]
-                > board_nums[pos.x as usize][pos.y as usize]{
+            let curr_value = &board_nums[curr_tile.y as usize][curr_tile.x as usize];
+            let adjacent_value = &board_nums[pos.y as usize][pos.x as usize];
+
+            if *adjacent_value == -1 {
                     tiles.push(*pos);
+                    board_nums[pos.y as usize][pos.x as usize] = board_nums[curr_tile.y as usize][curr_tile.x as usize] + 1
             }
         }
 
@@ -111,7 +118,7 @@ fn fix_board(board: Board<Tile>) /* -> Board<Tile>*/{
 
 
     //after getting distances start fixing map by removing walls #todo
-
+    board
 
 }
 
@@ -168,14 +175,21 @@ fn generateBoard(n: usize, x:i32, y:i32) -> Board<Tile>{
     }
 
 
-    Board {x: x as usize, y: y as usize, tiles: all_tiles}
+    let board: Board<Tile> = Board {x: x as usize, y: y as usize, tiles: all_tiles};
+
+
+    let fixed_board = fix_board(board);
+
+    fixed_board
+
+
 }
 
 fn main() {
 
     //making game board
     let mut board: Board<Tile> = generateBoard(12, 6, 7);
-    println!("{:?}", board);
+    //println!("{:?}", board);
 
     //fixing game board
     //skip for now ig
