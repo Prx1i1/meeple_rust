@@ -230,7 +230,7 @@ fn fix_board(board: &mut Board<Tile>){
                     board.tiles[adjacentPosition.y as usize][adjacentPosition.x as usize]
                     .walls[reverse_direction] = false;
 
-                    board_nums[y][x] = 0;
+                    board_nums[y][x] = max + 1;
                     
 
                 }
@@ -272,7 +272,7 @@ fn generateBoard(n: usize, x:i32, y:i32) -> Board<Tile>{
         //println!("{},{},{}", number, board_x, board_y);
 
         //generate walls
-        let custom_distr: [i32; 10] = [3,3,3,3, 1,1,1, 2, 2, 3];
+        let custom_distr: [i32; 10] = [0,0,0,0, 1,1,1, 2, 2, 3];
         let walls_amount: Option<&i32> = custom_distr.choose(&mut rng);
         
 
