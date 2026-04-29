@@ -45,16 +45,15 @@ fn get_adjacent(pos: Position, x: i32, y: i32, tiles: &Vec<Vec<Tile>>)
         if i >= 0 && i < x{
 
             //candidate position and tiles
-            let candidate: Position = Position {x: i, y: pos.y};
             let current_tile: Tile = tiles[pos.y as usize][pos.x as usize];
             let checked_tile: Tile = tiles[pos.y as usize][i as usize];
             
             //check walls
             let mut walls_blocked: bool = false;
-            if( i > pos.x){
+            if i > pos.x{
                 walls_blocked = current_tile.walls[1] || checked_tile.walls[3];
             }
-            if (i < pos.x){
+            if i < pos.x{
                 walls_blocked = current_tile.walls[3] || checked_tile.walls[1];
             }
 
@@ -63,6 +62,28 @@ fn get_adjacent(pos: Position, x: i32, y: i32, tiles: &Vec<Vec<Tile>>)
                 results.push(Position {x: i, y: pos.y});
             }
 
+        }
+    }
+
+    for j in [pos.y - 1, pos.y + 1]{
+        if j >= 0 && j < y {
+            //candidate position and tiles
+            let current_tile: Tile = tiles[pos.y as usize][pos.x as usize];
+            let checked_tile: Tile = tiles[j as usize][pos.x as usize];
+        
+                        //check walls
+            let mut walls_blocked: bool = false;
+            if j > pos.y{
+                walls_blocked = current_tile.walls[2] || checked_tile.walls[0];
+            }
+            if j < pos.y{
+                walls_blocked = current_tile.walls[0] || checked_tile.walls[2];
+            }
+
+            //walls ok
+            if !walls_blocked{
+                results.push(Position {x: pos.x, y: j});
+            }
         }
     }
 
