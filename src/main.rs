@@ -123,7 +123,7 @@ fn get_adjacent(pos: Position, x: i32, y: i32, tiles: &Vec<Vec<Tile>>)
 }
 
 //fix board w/ bfs or dfs pathing
-fn fix_board(board: &Board<Tile>){
+fn fix_board(board: &mut Board<Tile>){
 
     let mut board_nums: Vec<Vec<i32>> = vec![vec![-1; board.x];board.y]; 
 
@@ -136,7 +136,7 @@ fn fix_board(board: &Board<Tile>){
     tiles.push_back(pointer);
     while tiles.len() > 0{
 
-        println!("{:?}", tiles);
+        //println!("{:?}", tiles);
 
         let curr_tile: Position= tiles.pop_front().expect("err");
         //adjacent tiles of unknown value
@@ -162,12 +162,91 @@ fn fix_board(board: &Board<Tile>){
 
     //debug
     //println!("{:#?}", board_nums);
-    print_matrix(&board_nums);
+    print_matrix(&mut board_nums);
 
 
     //fixing: remove wall to lowest != -1
+    for (y, row) in board_nums.clone().iter().enumerate(){
+        for (x, elem) in row.iter().enumerate(){
+            //if element is -1
+            if *elem == -1{
+                //adjacent min that is more than -1
+
+                let mut max: i32 = -1;
+                let mut adjacentPosition: Position = Position { x: 0, y: 0 };
+                let mut direction: i32 = -1;
+
+                //adjacency
+                for new_x in [x as i32 - 1, x as i32 + 1]{
+
+                    if new_x as i32 >= 0 && new_x < row.len() as i32{
+
+                        let candidate: i32 = board_nums[y][new_x as usize];
+
+                        if candidate != -1 && candidate > max{
+                            max = candidate;
+                            adjacentPosition = Position { x: new_x as i32, y: y as i32 };
+
+                            if(new_x - x as i32 > 0){
+                                direction = 1;
+                            }else{
+                                direction = 3;
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                for new_y in [y as i32 - 1, y as i32 + 1]{
+                    if new_y as i32 >= 0 && new_y < board_nums.len() as i32{
+                        let candidate: i32 = board_nums[new_y as usize][x];
+
+                        if candidate != -1 && candidate > max{
+                            max = candidate;
+                            adjacentPosition = Position { x: x as i32, y: new_y as i32 };
+                        
+                        
+                            if(new_y - y as i32> 0){
+                                direction = 2;
+                            }else{
+                                direction = 0;
+                            }
+                        }
+                    }
+                }
+
+                //any adjacent found, changing walls
+                if max != -1 && direction != -1{
+
+                    
+
+                    
+                    let reverse_direction = ((direction + 2) % 4) as usize;
+                    //println!("{}", reverse_direction);
+
+                    board.tiles[y][x].walls[direction as usize] = false;
+                    board.tiles[adjacentPosition.y as usize][adjacentPosition.x as usize]
+                    .walls[reverse_direction] = false;
+
+                    board_nums[y][x] = 0;
+                    
+
+                }
 
 
+            }
+        }
+    }
+
+    //if any -1 is still present fix again
+    if board_nums.iter().flatten().any(|&x| x == -1){
+        fix_board(board);
+        println!("loop")
+    }
+    
+    print_matrix(&board_nums);
 
 }
 
@@ -193,7 +272,7 @@ fn generateBoard(n: usize, x:i32, y:i32) -> Board<Tile>{
         //println!("{},{},{}", number, board_x, board_y);
 
         //generate walls
-        let custom_distr: [i32; 10] = [0,0,0,0, 1,1,1, 2, 2, 3];
+        let custom_distr: [i32; 10] = [3,3,3,3, 1,1,1, 2, 2, 3];
         let walls_amount: Option<&i32> = custom_distr.choose(&mut rng);
         
 
@@ -238,7 +317,7 @@ fn main() {
     let mut board: Board<Tile> = generateBoard(12, 6, 7);
     //println!("{:?}", board);
 
-    let mut fixed_board = fix_board(&board);
+    let mut fixed_board = fix_board(&mut board);
 
 
     //fixing game board
