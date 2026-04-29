@@ -1,3 +1,5 @@
+use std::collections::VecDeque;
+
 use rand::prelude::*;
 
 #[derive(Debug)]
@@ -19,6 +21,30 @@ struct Tile{
 struct Position{
     x: i32,
     y: i32,
+}
+
+/// Prints a Vec<Vec<i32>> as a matrix
+fn print_matrix(matrix: &Vec<Vec<i32>>) {
+    if matrix.is_empty() {
+        println!("(empty matrix)");
+        return;
+    }
+
+    for (row_index, row) in matrix.iter().enumerate() {
+        if row.is_empty() {
+            println!("Row {}: (empty)", row_index);
+            continue;
+        }
+
+        // Print each element in the row separated by spaces
+        for (col_index, value) in row.iter().enumerate() {
+            if col_index > 0 {
+                print!(" ");
+            }
+            print!("{}", value);
+        }
+        println!(); // Newline after each row
+    }
 }
 
 fn emptyBoardAssemble(x: i32, y: i32) -> Vec<Vec<Tile>>{
@@ -97,7 +123,7 @@ fn get_adjacent(pos: Position, x: i32, y: i32, tiles: &Vec<Vec<Tile>>)
 }
 
 //fix board w/ bfs or dfs pathing
-fn fix_board(board: Board<Tile>) -> Board<Tile>{
+fn fix_board(board: &Board<Tile>){
 
     let mut board_nums: Vec<Vec<i32>> = vec![vec![-1; board.x];board.y]; 
 
@@ -106,13 +132,13 @@ fn fix_board(board: Board<Tile>) -> Board<Tile>{
     board_nums[0][0] = 0;
 
     //update board numbers
-    let mut tiles: Vec<Position> = vec![];
-    tiles.push(pointer);
+    let mut tiles: VecDeque<_> = VecDeque::from(vec![]);
+    tiles.push_back(pointer);
     while tiles.len() > 0{
 
         println!("{:?}", tiles);
 
-        let curr_tile: Position= tiles.pop().expect("err");
+        let curr_tile: Position= tiles.pop_front().expect("err");
         //adjacent tiles of unknown value
         let adjacents: Vec<Position> = get_adjacent(
         curr_tile,
@@ -127,7 +153,7 @@ fn fix_board(board: Board<Tile>) -> Board<Tile>{
             let adjacent_value = &board_nums[pos.y as usize][pos.x as usize];
 
             if *adjacent_value == -1 {
-                    tiles.push(*pos);
+                    tiles.push_back(*pos);
                     board_nums[pos.y as usize][pos.x as usize] = board_nums[curr_tile.y as usize][curr_tile.x as usize] + 1
             }
         }
@@ -135,11 +161,13 @@ fn fix_board(board: Board<Tile>) -> Board<Tile>{
     }
 
     //debug
-    println!("{:?}", board_nums);
+    //println!("{:#?}", board_nums);
+    print_matrix(&board_nums);
 
 
-    //after getting distances start fixing map by removing walls #todo
-    board
+    //fixing: remove wall to lowest != -1
+
+
 
 }
 
@@ -165,7 +193,7 @@ fn generateBoard(n: usize, x:i32, y:i32) -> Board<Tile>{
         //println!("{},{},{}", number, board_x, board_y);
 
         //generate walls
-        let custom_distr: [i32; 10] = [0,0,0,0, 1,1,1, 2,2, 3];
+        let custom_distr: [i32; 10] = [0,0,0,0, 1,1,1, 2, 2, 3];
         let walls_amount: Option<&i32> = custom_distr.choose(&mut rng);
         
 
@@ -199,9 +227,7 @@ fn generateBoard(n: usize, x:i32, y:i32) -> Board<Tile>{
     let board: Board<Tile> = Board {x: x as usize, y: y as usize, tiles: all_tiles};
 
 
-    let fixed_board = fix_board(board);
-
-    fixed_board
+    board
 
 
 }
@@ -211,6 +237,9 @@ fn main() {
     //making game board
     let mut board: Board<Tile> = generateBoard(12, 6, 7);
     //println!("{:?}", board);
+
+    let mut fixed_board = fix_board(&board);
+
 
     //fixing game board
     //skip for now ig
