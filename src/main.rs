@@ -23,6 +23,35 @@ struct Position{
     y: i32,
 }
 
+struct Meep{
+    id: i32,
+    spec_move: Box< dyn Fn() -> Vec<Tile>>
+}
+
+fn red_spec_move(board: Board<Tile>, pos: Position) -> Vec<Position>{
+    let x = pos.x;
+    let y = pos.y;
+
+    let mut tiles: Vec<Position> = [].to_vec(); 
+
+    if x - 1 >= 0{
+        tiles.push(Position {x: x - 1, y: pos.y});
+    }
+    if x + 1 < board.x as i32 {
+        tiles.push(Position { x: x + 1, y : pos.y });
+    }
+
+    if y - 1 >= 0{
+        tiles.push(Position {x: pos.x, y: y - 1});
+    }
+    if y + 1 < board.y as i32 {
+        tiles.push(Position { x: pos.x, y : y + 1 });
+    }
+
+    tiles
+
+}
+
 /// Prints a Vec<Vec<i32>> as a matrix
 fn print_matrix(matrix: &Vec<Vec<i32>>) {
     if matrix.is_empty() {
@@ -311,6 +340,101 @@ fn generateBoard(n: usize, x:i32, y:i32) -> Board<Tile>{
 
 }
 
+//return the list of positions possible to move in one move
+fn make_moves_list(board: Board<Tile>, pos: Position, piece: i32) -> Vec<Position>{
+
+    let mut result: Vec<Position> = [].to_vec();
+
+    let mut x: i32 = pos.x;
+
+    //right
+    while (x < board.x as i32){
+        let currentTile: Tile = board.tiles[pos.y as usize][x as usize];
+        x+=1;
+        if(x == board.x as i32){
+            result.push(Position { x: currentTile.x as i32, y: currentTile.y as i32 });
+            break;
+        }
+        let nextTile: Tile = board.tiles[pos.y as usize][x as usize];
+
+        //check if wall or border
+        if(currentTile.walls[1] == true || nextTile.walls[3] == true){
+            //res+ currentTile
+            result.push(Position { x: currentTile.x as i32, y: currentTile.y as i32 });
+            break;
+        }
+
+    }
+
+    
+    //left
+    x = pos.x;
+    while (x > 0){
+        let currentTile: Tile = board.tiles[pos.y as usize][x as usize];
+        x-=1;
+        if x == 0{
+            result.push(Position { x: currentTile.x as i32, y: currentTile.y as i32 });
+            break;
+        }
+        let nextTile: Tile = board.tiles[pos.y as usize][x as usize];
+
+        //check if wall or border
+        if(currentTile.walls[3] == true || nextTile.walls[1] == true || x == 0){
+            //res+ currentTile
+            result.push(Position { x: currentTile.x as i32, y: currentTile.y as i32 });
+            break;
+        }
+    }
+
+
+    let mut y: i32 = pos.y;
+    //bottom
+    while (y < board.y as i32){
+        let currentTile: Tile = board.tiles[y as usize][pos.x as usize];
+        y+=1;
+        if y == board.y as i32{
+            result.push(Position { x: currentTile.x as i32, y: currentTile.y as i32 });
+            break;
+        }
+        let nextTile: Tile = board.tiles[y as usize][pos.x as usize];
+
+        //check if wall or border
+        if(currentTile.walls[2] == true || nextTile.walls[0] == true){
+            //res+ currentTile
+            result.push(Position { x: currentTile.x as i32, y: currentTile.y as i32 });
+            break;
+        }
+
+    }
+
+    
+    //top
+    y = pos.y;
+    while (y > 0){
+        let currentTile: Tile = board.tiles[y as usize][pos.x as usize];
+        y-=1;
+        if y == 0{
+            result.push(Position { x: currentTile.x as i32, y: currentTile.y as i32 });
+            break;
+        }
+        let nextTile: Tile = board.tiles[y as usize][pos.x as usize];
+
+        //check if wall or border
+        if(currentTile.walls[0] == true || nextTile.walls[2] == true){
+            //res+ currentTile
+            result.push(Position { x: currentTile.x as i32, y: currentTile.y as i32 });
+            break;
+        }
+    }
+
+
+    //additional tiles for skil;
+
+    result
+
+
+}
+
 fn main() {
 
     //making game board
@@ -320,6 +444,5 @@ fn main() {
     let mut fixed_board = fix_board(&mut board);
 
 
-    //fixing game board
-    //skip for now ig
+    println!("{:?}", make_moves_list(board, Position {x: 3, y:3}, 0))
 }
