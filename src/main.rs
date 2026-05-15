@@ -1,4 +1,4 @@
-use std::collections::VecDeque;
+use std::{collections::{HashSet, VecDeque}, ptr::null};
 
 use rand::prelude::*;
 
@@ -17,16 +17,18 @@ struct Tile{
     on: u32,
 }
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 struct Position{
     x: i32,
     y: i32,
 }
 
+#[derive(Copy, Clone)]
 struct Meep{
     id: i32,
-    spec_move: Box< dyn Fn() -> Vec<Tile>>
+    spec_move: fn(Board<Tile>, Position) -> Vec<Position>
 }
+
 
 fn red_spec_move(board: Board<Tile>, pos: Position) -> Vec<Position>{
     let x = pos.x;
@@ -113,7 +115,7 @@ fn get_adjacent(pos: Position, x: i32, y: i32, tiles: &Vec<Vec<Tile>>)
             }
 
             //walls ok
-            if !walls_blocked{
+            if !walls_blocked || tiles[pos.y as usize][i as usize].on != 0{
                 results.push(Position {x: i, y: pos.y});
             }
 
@@ -135,8 +137,8 @@ fn get_adjacent(pos: Position, x: i32, y: i32, tiles: &Vec<Vec<Tile>>)
                 walls_blocked = current_tile.walls[0] || checked_tile.walls[2];
             }
 
-            //walls ok
-            if !walls_blocked{
+            //walls ok 
+            if !walls_blocked || tiles[j as usize][pos.x as usize].on != 0{
                 results.push(Position {x: pos.x, y: j});
             }
         }
@@ -435,7 +437,17 @@ fn make_moves_list(board: Board<Tile>, pos: Position, piece: i32) -> Vec<Positio
 
 }
 
+fn truncate_moves_list(exclude: Position, positions: Vec<Position>) -> Vec<Position>{
+    let mut seen = HashSet::new();
+    positions
+        .into_iter()
+        .filter(|pos| *pos != exclude && seen.insert(pos.clone()))
+        .collect()
+}
+
 fn main() {
+
+    //meeps
 
     //making game board
     let mut board: Board<Tile> = generateBoard(12, 6, 7);
@@ -443,6 +455,13 @@ fn main() {
 
     let mut fixed_board = fix_board(&mut board);
 
+    let mut meeps: [Meep; 9] = [Meep {id: -1, spec_move: red_spec_move}; 9];
 
-    println!("{:?}", make_moves_list(board, Position {x: 3, y:3}, 0))
+    let mut moves = make_moves_list(board, Position {x: 3, y:3}, 0);
+
+    let test_meep: Meep = meeps[0];
+
+    //pass full move list and remove unnecesary ones
+    truncate_moves_list(Position { x: 3, y: 3 }, moves);
+
 }
